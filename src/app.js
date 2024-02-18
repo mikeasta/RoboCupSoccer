@@ -67,6 +67,10 @@ class App {
     startGame() {
         console.log("Game Started")
     }
+
+    closeGame() {
+        console.log(false)
+    }
 }
 
 module.exports = App;
