@@ -1,0 +1,12 @@
+{
+  "name": "intelsoccer",
+  "version": "1.0.0",
+  "description": "Intellectual Soccer Agent",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "mikeasta-jengle88",
+  "license": "ISC"
+}
