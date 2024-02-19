@@ -4,9 +4,20 @@ const VERSION_DEFAULT = 7
 const ARRANGEMENT_DEFAULT = require("./data/players.json")
 
 class App {
-    constructor(version=VERSION_DEFAULT) {
+    constructor(version=VERSION_DEFAULT, leftTeamLabel="Pandas", rightTeamLabel="Polars") {
         this.version = version
-        this.teams   = {} 
+
+        this.leftTeamLabel  = leftTeamLabel
+        this.rightTeamLabel = rightTeamLabel
+
+        this.teams = {}
+        this.teams[leftTeamLabel]  = []
+        this.teams[rightTeamLabel] = []
+    }
+
+    // Функция задержки исполнения синхронного кода
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // Добавить агента
@@ -19,10 +30,12 @@ class App {
         const agent = new Agent()
 
         // Создаем сокет
+        console.log("qwe")
         const agentSocket = createAgentSocket(agent, teamLabel, this.version)
 
         // Добавить агента в команду
         this.teams[teamLabel].push(agent)
+        return agent
     }
 
     // Расставить игроков
@@ -47,8 +60,7 @@ class App {
         if (Object.keys(this.teams).length === 2)
             throw Error(`Уже инициализированны две команды: ${Object.keys(this.teams)}`)
 
-        // Создаем команду и заполняем ее агентами
-        this.teams[teamLabel] = []
+        // Заполняем ее агентами
         for (let i=0; i < 11; i++)
             this.addAgent(teamLabel)
 
@@ -57,40 +69,52 @@ class App {
     }
 
     // Инициализировать стартовые условия
-    setupGame(leftTeamLabel="Bears", rightTeamLabel="Bulls") {
+    setupGame() {
         // Создать команды
-        this.setupTeam(leftTeamLabel)
-        this.setupTeam(rightTeamLabel)
+        this.setupTeam(this.leftTeamLabel)
+        this.setupTeam(this.rightTeamLabel)
+    }
+
+    // Путешествовать по квадрату
+    async setupFirstLab() {
+        // Создаем игрока
+        const left_agent = this.addAgent(this.leftTeamLabel); await this.sleep(1)
+
+        // Расставим сокомандников
+        const teammate_1 = this.addAgent(this.leftTeamLabel); await this.sleep(1)
+        const teammate_2 = this.addAgent(this.leftTeamLabel); await this.sleep(1)
+        
+        teammate_1.socketSend("move", "-20 -5"); await this.sleep(1) // 2
+        teammate_2.socketSend("move", "-20 5");  await this.sleep(1) // 3
+
+        // Расставим соперников
+        const opponent_1 = this.addAgent(this.rightTeamLabel); await this.sleep(1)
+        const opponent_2 = this.addAgent(this.rightTeamLabel); await this.sleep(1)
+        const opponent_3 = this.addAgent(this.rightTeamLabel); await this.sleep(1)
+        const opponent_4 = this.addAgent(this.rightTeamLabel); await this.sleep(1)
+        
+        opponent_1.socketSend("move", "-15 0");  await this.sleep(1)
+        opponent_2.socketSend("move", "-10 -5"); await this.sleep(1)
+        opponent_3.socketSend("move", "-10 5");  await this.sleep(1)
+        opponent_4.socketSend("move", "-20 0");  await this.sleep(1)
+
+        while (true) {
+            await this.sleep(1000)
+            left_agent.socketSend("move", "-15 0")
+            await this.sleep(3000)
+            left_agent.socketSend("move", "-15 -15")
+            await this.sleep(3000)
+            left_agent.socketSend("move", "0 -15")
+            await this.sleep(3000)
+            left_agent.socketSend("move", "-30 0")
+            await this.sleep(2000)
+        }
     }
 
     // Запустить игру
     startGame() {
         console.log("Game Started")
     }
-
-    closeGame() {
-        console.log(false)
-    }
 }
 
 module.exports = App;
-
-// let time = 3000
-
-// function sleep(ms) {
-//     return new Promise(resolve => setTimeout(resolve, ms));
-// }
-// async function demo() {
-//     while(true) {
-//         agent.socketSend("move", `-15 0`) 
-//         agent.msg
-//         await sleep(time)
-//         agent.socketSend("move", `0 15`)
-//         await sleep(time)
-//         agent.socketSend("move", `15 0`)
-//         await sleep(time)
-//         agent.socketSend("move", `0 -15`)
-//         await sleep(time)
-//     }
-// }
-// demo()

@@ -1,23 +1,27 @@
 const Msg = require('./msg')
 const readline = require('readline')
 class Agent {
-    constructor() {
+    constructor(debug=false, run=false, act=null) {
         this.position = "l" // По умолчанию левая половина поля
-        this.run = false // Игра начата
-        this.act = null // Действия
+        this.run      = run // Игра начата
+        this.act      = act // Действия
+        this.debug    = debug // Нужно ли выводить информацию об игроке и окружении
 
-        this.rl = readline.createInterface({ // Чтение консоли
+        // Чтение консоли
+        this.rl = readline.createInterface({ 
             input: process.stdin,
             output: process.stdout
         })
 
-        this.rl.on('line', (input) => {  // Обработка строки из консоли
-            if(this.run) { // Если игра начата движения вперед, вправо, влево, удар по мячу
+        // Обработка строки из консоли
+        this.rl.on('line', input => {  
+            // Если игра начата движения вперед, вправо, влево, удар по мячу
+            if(this.run) { 
                 if("w" == input) this.act = {n: "dash", v: 100}
                 if("d" == input) this.act = {n: "turn", v: 20}
                 if("a" == input) this.act = {n: "turn", v: -20}
                 if("s" == input) this.act = {n: "kick", v: 100}
-        }
+            }
         })
     }
 
