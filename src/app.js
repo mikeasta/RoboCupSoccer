@@ -30,8 +30,7 @@ class App {
         const agent = new Agent()
 
         // Создаем сокет
-        console.log("qwe")
-        const agentSocket = createAgentSocket(agent, teamLabel, this.version)
+        createAgentSocket(agent, teamLabel, this.version)
 
         // Добавить агента в команду
         this.teams[teamLabel].push(agent)
@@ -42,15 +41,18 @@ class App {
     arrangeTeamAgents(teamLabel, arrangement) {
         // Проверяем совпадение размера команды и разметки игроков
         if (this.teams[teamLabel].length != arrangement.length) 
-            throw Error(`Неправильные данные при попытке расставить игроков: размер команды = ${this.teams[teamLabel].length}, размер расстановки = ${arrangement.length}`)
+            throw Error(`Размер команды (${this.teams[teamLabel].length}) не совпадает с размером расстановки (${arrangement.length})`)
 
         for (let i = 0; i < arrangement.length; i++) {
+            this.sleep(1)
+
             // Определяем входные данные
             const cmd   = "move"
-            const value = arrangement[i]["x"] + " " + arrangement[i]["y"]
+            const value = `${arrangement[i]["x"]} ${arrangement[i]["y"]}`
+            const agent = this.teams[teamLabel][i]
 
             // Отправляем команду по сокету агента
-            this.teams[teamLabel][i].socketSend(cmd, value)
+            agent.socketSend(cmd, value)
         }
     }
 
@@ -61,8 +63,7 @@ class App {
             throw Error(`Уже инициализированны две команды: ${Object.keys(this.teams)}`)
 
         // Заполняем ее агентами
-        for (let i=0; i < 11; i++)
-            this.addAgent(teamLabel)
+        for (let i = 0; i < 11; i++) this.addAgent(teamLabel)
 
         // Расставляем игроков
         this.arrangeTeamAgents(teamLabel, arrangement)
