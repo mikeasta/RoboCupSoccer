@@ -16,15 +16,12 @@ class App {
     }
 
     // Функция задержки исполнения синхронного кода
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 
     // Добавить агента
     addAgent(teamLabel, debug=false) {
         // Проверяем, определена ли команда
-        if (!Object.hasOwn(this.teams, teamLabel)) 
-            throw Error(`Команды '${teamLabel}' не существует`)
+        if (!Object.hasOwn(this.teams, teamLabel)) throw Error(`Команды '${teamLabel}' не существует`)
         
         // Создаем агента
         const agent = new Agent(debug)
@@ -39,8 +36,8 @@ class App {
 
     // Запуск ЛР №1
     async setupFirstLab() {
-        const x = prompt("Введите координату Х: ")
-        const y = prompt("Введите координату У: ")
+        const x = prompt("Введите координату Х игрока: ")
+        const y = prompt("Введите координату У игрока: ")
         const angle = prompt("Введите значение поворота игрока (поворот раз в 1.5 секунды): ")
 
         // Создаем игрока
