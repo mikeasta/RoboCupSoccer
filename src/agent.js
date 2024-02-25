@@ -68,11 +68,9 @@ class Agent {
 
     // Анализ сообщения
     analyzeEnv(msg, cmd, p){ 
-        if (cmd === "see") 
-            this.debug ? this.analyzeSeeCommand(cmd, p): null;
-        
-        if (cmd === "sense_body")
-        this.debug ? this.analyzeSenseCommand(cmd, p): null;
+        // this.debug служит для вывода в консоль данных о координатах текущего агента
+        if (cmd === "see") this.debug ? this.analyzeSeeCommand(cmd, p): null;
+        if (cmd === "sense_body") this.debug ? this.analyzeSenseCommand(cmd, p): null;
     }
 
     // Анализ сообщения о том, что видит игрок
@@ -82,6 +80,7 @@ class Agent {
         for (let observable of p) {
             if (typeof observable !== "object") continue;
 
+            // Парсим данные, которы пришли из сокета
             const observable_label = observable.cmd.p.join("")
             const observable_data  = observable.p
 
@@ -117,9 +116,9 @@ class Agent {
             for (let flag of flagsWithDistance.slice(1, -1).sort((a, b) => a.distance - b.distance)) {
                 flag_data_1 = flag
                 if ((flag_data_2.coords.x === flag.coords.x) || (flag.coords.x === flag_data_3.coords.x) || (flag_data_2.coords.y === flag.coords.y) || (flag.coords.y === flag_data_3.coords.y)) 
-                    continue
+                    continue // Флаг нам не подходит, но чтобы не окончить цикл вообще без флага, сохраним его
                 else 
-                    break
+                    break // Обнаружили подходящий флаг. Оканчиваем перебор
             }
 
             // Найдем координаты
@@ -132,7 +131,9 @@ class Agent {
         for (let observable of observables) {
             if (observable.label[0] === "p") {
                 enemy_data = observable;
-                if (enemy_data.distance) break
+
+                // Выбираем соперника, который достаточно близок, чтобы игроку суметь посчитать расстояние до него
+                if (enemy_data.distance) break 
             }
         }
 
