@@ -5,8 +5,6 @@ const readline = require('readline')
 const flagsData = require("./data/flags.json")
 const interpret = require("./utils").interpret
 const getPosition3Flags = require("./utils").getPosition3Flags
-const distance = require("./utils").distance
-const validateCoords = require("./utils").validateCoords
 
 class Agent {
     constructor(debug=false, run=false, act=null) {
