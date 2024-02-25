@@ -38,7 +38,7 @@ class App {
     async setupFirstLab() {
         const x = prompt("Введите координату Х игрока: ")
         const y = prompt("Введите координату У игрока: ")
-        const angle = prompt("Введите значение поворота игрока (поворот раз в 1.5 секунды): ")
+        const angle = prompt("Введите значение поворота игрока в секунду: ")
 
         // Создаем игрока
         const left_agent = this.addAgent(this.leftTeamLabel, true); await this.sleep(1) 
@@ -49,7 +49,7 @@ class App {
         right_agent.socketSend("move", `-30 0`);                await this.sleep(1) 
 
         // Запускаем цикл для поворота игрока
-        setInterval(() => { left_agent.socketSend("turn", String(angle)) }, 1500);
+        setInterval(() => { left_agent.socketSend("turn", String(angle)) }, 1000);
     }
 }
 
