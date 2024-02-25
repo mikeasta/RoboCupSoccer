@@ -4,22 +4,20 @@ const borders = {x_min: -54, x_max: 54, y_min: -32, y_max: 32}
 // Функция по рассчету расстояния между двумя точками
 const distance = (p1, p2) => Math.sqrt((p1.x - p2.x)**2 + (p1.y-p2.y)**2)
 
-// Интерпретация инфы о флаге
-const interpretFlag = observable_data => {
+// Интерпретация инфы
+const interpret = observable_data => {
     // Собираем информацию о видимости объектов
     // Для расшифровки, страница 8-9 методических указаний
     const label               = observable_data[0]
-    const coords              = observable_data[1]
-    const distance            = observable_data.length > 1 + 2  ? observable_data[2] : undefined;
-    const direction           = observable_data.length > 1 + 2  ? observable_data[3] : observable_data[2];
-    const distanceChange      = observable_data.length > 2 + 2  ? observable_data[4] : undefined;
-    const directionChange     = observable_data.length > 2 + 2  ? observable_data[5] : undefined;
-    const bodyFacingDirection = observable_data.length > 4 + 2  ? observable_data[6] : undefined;
-    const headFacingDirection = observable_data.length > 4 + 2  ? observable_data[7] : undefined;
+    const distance            = observable_data.length > 1 + 1  ? observable_data[1] : undefined;
+    const direction           = observable_data.length > 1 + 1  ? observable_data[2] : observable_data[1];
+    const distanceChange      = observable_data.length > 2 + 1  ? observable_data[3] : undefined;
+    const directionChange     = observable_data.length > 2 + 1  ? observable_data[4] : undefined;
+    const bodyFacingDirection = observable_data.length > 4 + 1  ? observable_data[5] : undefined;
+    const headFacingDirection = observable_data.length > 4 + 1  ? observable_data[6] : undefined;
 
     return { 
         label, 
-        coords, 
         distance, 
         direction, 
         distanceChange, 
@@ -67,7 +65,7 @@ const validateCoords = coords => {
 
 module.exports = {
     distance,
+    interpret,
     validateCoords,
-    interpretFlag,
     getPosition3Flags
 }

@@ -3,7 +3,7 @@ const readline = require('readline')
 
 // Функции для работы с флагами и координатами
 const flagsData = require("./data/flags.json")
-const interpretFlag = require("./utils").interpretFlag
+const interpret = require("./utils").interpret
 const getPosition3Flags = require("./utils").getPosition3Flags
 const distance = require("./utils").distance
 const validateCoords = require("./utils").validateCoords
@@ -70,52 +70,43 @@ class Agent {
 
     // Анализ сообщения
     analyzeEnv(msg, cmd, p){ 
-        switch(cmd) {
-            case "see": this.debug ? this.analyzeSeeCommand(cmd, p): null; break;
-        }
+        if (cmd === "see") 
+            this.debug ? this.analyzeSeeCommand(cmd, p): null;
+        
+        if (cmd === "sense_body")
+        this.debug ? this.analyzeSenseCommand(cmd, p): null;
     }
 
     // Анализ сообщения о том, что видит игрок
     analyzeSeeCommand(cmd, p) {
-        // 1. Сериализуем полученную инфу
+        // I. Считываем все наблюдаемые объекты и переводим их в тип Object
         let observables = []
-        let flags       = []
         for (let observable of p) {
-            // Если итеруируемый элемент не объект - пропускаем итерацию
-            // т.к. наблюдаемые объекты представлены как Object
             if (typeof observable !== "object") continue;
 
-            // Получаем название наблюдаемого объекта
-            const label = observable.cmd.p.join("")
-            const observable_data = observable.p
+            const observable_label = observable.cmd.p.join("")
+            const observable_data  = observable.p
 
-            if (label[0] === "f" || label[0] === "g") {
-                // Рассматриваемый объект - флаг
-                // Достанем его из базы
-                const flag_coords = Object.assign({}, flagsData[label])
-                
-                // Инвертируем кординату Y, если игрок на левой стороне
-                flag_coords.y = this.position === "l" ? -flag_coords.y: flag_coords.y;
-
-                // ! Сразу интерпретируем флаги
-                flags.push(interpretFlag([label, flag_coords, ...observable_data]))
-            } else {
-                // Другие объекты пока не обрабатываем
-                observables.push([label, ...observable_data])
-            }
+            // Интерпретируем полученные данные
+            observables.push(interpret([observable_label, ...observable_data]))
         }
 
-        // // Вывод всех флагов
-        // console.log("Что я вижу:")
-        // console.log(flags) // Вывод всех наблюдаемых флагов
-        
-        // 2. Считаем координаты самого игрока по флагам
+        // Отфильтруем все флаги и инвертируем их значение y
+        let flags = observables.filter(element => element.label[0] === "f" || element.label[0] === "g")
+        flags.forEach(element => {
+            let coords = Object.assign({}, flagsData[element.label])
+            coords.y = this.position === "l" ? -coords.y: coords.y;
+            element.coords = coords
+        });
 
+        // II. Считаем координаты самого игрока по флагам
+        // Отфильтруем флаги и отберем те, дистанцию до которых мы знаем. Отсортируем по расстоянию и направлению
         const flagsWithDistance = flags
             .filter(flag => typeof flag.distance != "undefined")
             .sort((a, b) => a.distance - b.distance)
             .sort((a, b) => a.direction - b.direction); 
 
+        let player_coords
         if (flagsWithDistance.length >= 3) {
             // Берем два самых крайних в поле зрения флага
             const flag_data_1 = flagsWithDistance[0]
@@ -125,30 +116,54 @@ class Agent {
             let flag_data_2;
 
             // 1. Нельзя, чтобы было 3 одинаковых х и у
-            // 2. Нельзя, чтобы было 2 одинаковых точки
+            // 2. Нельзя, чтобы были одинаковые флаги
             for (let flag of flagsWithDistance.slice(1, -1)) {
                 flag_data_2 = flag
-                if (((flag_data_1.x === flag.x) && (flag.x === flag_data_3.x)) || ((flag_data_1.y === flag.y) && (flag.y === flag_data_3.y))) 
+                if (((flag_data_1.coords.x === flag.coords.x) && (flag.coords.x === flag_data_3.coords.x)) || ((flag_data_1.coords.y === flag.coords.y) && (flag.coords.y === flag_data_3.coords.y))) 
                     continue
                 else 
                     break
             }
-
-            // Если у всех флагов одинаковая какая либо координата, то возьмем точку из середины
-            if (((flag_data_1.x === flag_data_2.x) && (flag_data_2.x === flag_data_3.x)) || ((flag_data_1.y === flag_data_2.y) && (flag_data_2.y === flag_data_3.y))) 
-                flag_data_2 = flagsWithDistance[flagsWithDistance.length - Math.round(flagsWithDistance.length/2)]
             
             // Найдем координаты
-            const player_coords = getPosition3Flags(flag_data_1, flag_data_2, flag_data_3)
-            console.log(player_coords, [this.position, flag_data_1.label, flag_data_1.coords, flag_data_2.label, flag_data_2.coords, flag_data_3.label, flag_data_3.coords,]) 
+            player_coords = getPosition3Flags(flag_data_1, flag_data_2, flag_data_3)
+            console.log(`Координаты игрока: x=${player_coords.x}, y=${player_coords.y}. Определены по флагам (${flag_data_1.label}, ${flag_data_2.label}, ${flag_data_3.label})`) 
         } 
 
-        // 3. Считаем координаты сокомандников
+        // III. Считаем координаты соперника
+        let enemy_data;
+        for (let observable of observables) {
+            if (observable.label[0] === "p") {
+                enemy_data = observable;
+                if (enemy_data.distance) break
+            }
+        }
 
-        // 4. Считаем координаты врагов
+        if (!enemy_data) {
+            console.log("Противник вне поля зрения")
+        } else {
+            const enemy_distance  = enemy_data.distance
+            const enemy_direction = enemy_data.direction - this.directionOfSpeed - this.headAngle
 
-        // 5. Считаем координаты мяча
+            const enemy_angle  = enemy_direction * Math.PI / 180
+            const enemy_coords = {
+                x: player_coords.x + Math.cos(enemy_angle) * enemy_distance,
+                y: player_coords.y + Math.sin(enemy_angle) * enemy_distance
+            } 
 
+            console.log(`Координаты соперника: x=${enemy_coords.x}, y=${enemy_coords.y}. `)
+        }
+    }
+
+    // Анализ сенсоров игрока
+    analyzeSenseCommand(cmd, p) {
+        for (let obj of p) {
+            if (obj.cmd == 'head_angle') 
+                this.headAngle = obj.p[0]
+            
+            if (obj.cmd == 'speed') 
+                this.directionOfSpeed = obj.p[1]
+        }
     }
 
     sendCmd() {

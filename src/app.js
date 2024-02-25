@@ -1,6 +1,7 @@
 const Agent = require('./agent'); 
 const createAgentSocket = require('./socket')
 const VERSION_DEFAULT = 7
+const prompt = require("prompt-sync")();
 
 class App {
     constructor(version=VERSION_DEFAULT, leftTeamLabel="Pandas", rightTeamLabel="Polars") {
@@ -38,25 +39,19 @@ class App {
 
     // Путешествовать по квадрату
     async setupFirstLab() {
+        const x = prompt("Введите координату Х: ")
+        const y = prompt("Введите координату У: ")
+        const angle = prompt("Введите значение поворота игрока (поворот раз в 1.5 секунды): ")
+
         // Создаем игрока
-        const left_agent = this.addAgent(this.leftTeamLabel, true); await this.sleep(1) // слипы для того, чтобы
-        left_agent.socketSend("move", "-15 0");                     await this.sleep(1) // агент успевал отправить запрос (инфа не точная)
+        const left_agent = this.addAgent(this.leftTeamLabel, true); await this.sleep(1) 
+        left_agent.socketSend("move", `${x} ${y}`);                 await this.sleep(1) 
+        
+        const right_agent = this.addAgent(this.rightTeamLabel); await this.sleep(1) 
+        right_agent.socketSend("move", `-30 0`);                await this.sleep(1) 
 
-        // Запускаем параллельный цикл для поворота игрока влево
-        setInterval(() => { left_agent.socketSend("turn", "-15") }, 1500);
-
-        // Перемещение игрока
-        while (true) {
-            await this.sleep(1000)
-            left_agent.socketSend("move", "-15 0")
-            await this.sleep(3000)
-            left_agent.socketSend("move", "-15 -15")
-            await this.sleep(3000)
-            left_agent.socketSend("move", "0 -15")
-            await this.sleep(3000)
-            left_agent.socketSend("move", "-30 0")
-            await this.sleep(2000)
-        }
+        // Запускаем цикл для поворота игрока
+        setInterval(() => { left_agent.socketSend("turn", String(angle)) }, 1500);
     }
 }
 

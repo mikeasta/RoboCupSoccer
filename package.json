@@ -8,5 +8,8 @@
     "start": "node index.js"
   },
   "author": "mikeasta-jengle88",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
+  }
 }
