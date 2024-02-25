@@ -18,7 +18,7 @@ class App {
     // Функция задержки исполнения синхронного кода
     sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 
-    // Добавить агента
+    // Добавить агента 
     addAgent(teamLabel, debug=false) {
         // Проверяем, определена ли команда
         if (!Object.hasOwn(this.teams, teamLabel)) throw Error(`Команды '${teamLabel}' не существует`)

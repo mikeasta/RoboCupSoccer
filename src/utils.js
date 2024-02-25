@@ -20,7 +20,7 @@ const interpret = observable_data => {
     }
 }
 
-// Поиск координат текущей позиции по трем флагам
+// Поиск координат текущей позиции по трем флагам (см. мет. ук стр. 25)
 const getPosition3Flags = (flag_1, flag_2, flag_3) => {
     // Эпсилон чтобы избежать деления на ноль в случае, если не удалось избежать
     // флагов с одинаковой координатой на предыдущем этапе
@@ -45,7 +45,6 @@ const getPosition3Flags = (flag_1, flag_2, flag_3) => {
 }
 
 module.exports = {
-    distance,
     interpret,
     getPosition3Flags
 }
