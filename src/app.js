@@ -37,7 +37,7 @@ class App {
         return agent
     }
 
-    // Путешествовать по квадрату
+    // Запуск ЛР №1
     async setupFirstLab() {
         const x = prompt("Введите координату Х: ")
         const y = prompt("Введите координату У: ")
@@ -46,7 +46,7 @@ class App {
         // Создаем игрока
         const left_agent = this.addAgent(this.leftTeamLabel, true); await this.sleep(1) 
         left_agent.socketSend("move", `${x} ${y}`);                 await this.sleep(1) 
-        
+
         const right_agent = this.addAgent(this.rightTeamLabel); await this.sleep(1) 
         right_agent.socketSend("move", `-30 0`);                await this.sleep(1) 
 

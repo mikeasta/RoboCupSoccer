@@ -91,6 +91,8 @@ class Agent {
 
         // Отфильтруем все флаги и инвертируем их значение y
         let flags = observables.filter(element => element.label[0] === "f" || element.label[0] === "g")
+
+        // Для каждого увиденного флага определяем координаты
         flags.forEach(element => {
             let coords = Object.assign({}, flagsData[element.label])
             coords.y = this.position === "l" ? -coords.y: coords.y;
@@ -98,31 +100,28 @@ class Agent {
         });
 
         // II. Считаем координаты самого игрока по флагам
-        // Отфильтруем флаги и отберем те, дистанцию до которых мы знаем. Отсортируем по расстоянию и направлению
-        const flagsWithDistance = flags
-            .filter(flag => typeof flag.distance != "undefined")
-            .sort((a, b) => a.distance - b.distance)
+        // Отфильтруем флаги и отберем те, дистанцию до которых мы знаем. Отсортируем по направлению
+        const flagsWithDistance = flags.filter(flag => typeof flag.distance != "undefined")
             .sort((a, b) => a.direction - b.direction); 
 
         let player_coords
         if (flagsWithDistance.length >= 3) {
             // Берем два самых крайних в поле зрения флага
-            const flag_data_1 = flagsWithDistance[0]
+            const flag_data_2 = flagsWithDistance[0]
             const flag_data_3 = flagsWithDistance[flagsWithDistance.length - 1]
-
+            
             // Перебираем средний флаг
-            let flag_data_2;
-
-            // 1. Нельзя, чтобы было 3 одинаковых х и у
-            // 2. Нельзя, чтобы были одинаковые флаги
-            for (let flag of flagsWithDistance.slice(1, -1)) {
-                flag_data_2 = flag
-                if (((flag_data_1.coords.x === flag.coords.x) && (flag.coords.x === flag_data_3.coords.x)) || ((flag_data_1.coords.y === flag.coords.y) && (flag.coords.y === flag_data_3.coords.y))) 
+            // Нельзя, чтобы знаменатель в из алгоритма в utils.js был равен нулю
+            // Отсортируем оставшеся флаги по близости
+            let flag_data_1;
+            for (let flag of flagsWithDistance.slice(1, -1).sort((a, b) => a.distance - b.distance)) {
+                flag_data_1 = flag
+                if ((flag_data_2.coords.x === flag.coords.x) || (flag.coords.x === flag_data_3.coords.x) || (flag_data_2.coords.y === flag.coords.y) || (flag.coords.y === flag_data_3.coords.y)) 
                     continue
                 else 
                     break
             }
-            
+
             // Найдем координаты
             player_coords = getPosition3Flags(flag_data_1, flag_data_2, flag_data_3)
             console.log(`Координаты игрока: x=${player_coords.x}, y=${player_coords.y}. Определены по флагам (${flag_data_1.label}, ${flag_data_2.label}, ${flag_data_3.label})`) 
@@ -140,6 +139,7 @@ class Agent {
         if (!enemy_data) {
             console.log("Противник вне поля зрения")
         } else {
+            // Определяем координаты соперника
             const enemy_distance  = enemy_data.distance
             const enemy_direction = enemy_data.direction - this.directionOfSpeed - this.headAngle
 
