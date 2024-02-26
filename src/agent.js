@@ -94,7 +94,8 @@ class Agent {
         // Для каждого увиденного флага определяем координаты
         flags.forEach(element => {
             let coords = Object.assign({}, flagsData[element.label]) // assign чтобы ликвидировать ссылочность
-            coords.y = this.position === "l" ? -coords.y: coords.y;  // Если игрок левой стороны, инвертируем значение координаты У для флаша
+            coords.y = this.position === "l" ? -coords.y: coords.y;  // Если игрок левой стороны, инвертируем значение координаты У
+            coords.x = this.position === "r" ? -coords.x: coords.x;  // Если игрок правой стороны, инвертируем значение координаты Х
             element.coords = coords
         });
 
