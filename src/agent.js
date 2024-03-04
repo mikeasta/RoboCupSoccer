@@ -5,6 +5,7 @@ const readline = require('readline')
 const flagsData = require("./data/flags.json")
 const interpret = require("./utils").interpret
 const getPosition3Flags = require("./utils").getPosition3Flags
+const getPosition2Flags = require("./utils").getPosition2Flags
 
 class Agent {
     constructor(debug=false, run=false, act=null) {
@@ -12,7 +13,10 @@ class Agent {
         this.run      = run   // Игра начата
         this.act      = act   // Действия
         this.debug    = debug // Нужно ли выводить информацию об игроке и окружении
-
+        
+        this.x = undefined
+        this.y = undefined
+        
         // Чтение консоли
         this.rl = readline.createInterface({ 
             input: process.stdin,
@@ -105,7 +109,7 @@ class Agent {
             .sort((a, b) => a.direction - b.direction); 
 
         let player_coords
-        if (flagsWithDistance.length >= 3) {
+        if (flagsWithDistance.length >= 3) { // Видим три или более флагов
             // Берем два самых крайних в поле зрения флага
             const flag_data_2 = flagsWithDistance[0]
             const flag_data_3 = flagsWithDistance[flagsWithDistance.length - 1]
@@ -124,34 +128,47 @@ class Agent {
 
             // Найдем координаты
             player_coords = getPosition3Flags(flag_data_1, flag_data_2, flag_data_3)
+            this.x = player_coords.x
+            this.y = player_coords.y
             console.log(`Координаты игрока: x=${player_coords.x}, y=${player_coords.y}. Определены по флагам (${flag_data_1.label}, ${flag_data_2.label}, ${flag_data_3.label})`) 
-        } 
+        } else if (flagsWithDistance.length === 2) { // Видим только два флага
+            // Берем два единственных флага
+            const flag_data_1 = flagsWithDistance[0]
+            const flag_data_2 = flagsWithDistance[1]
 
-        // III. Считаем координаты соперника
-        let enemy_data;
-        for (let observable of observables) {
-            if (observable.label[0] === "p") {
-                enemy_data = observable;
-
-                // Выбираем соперника, который достаточно близок, чтобы игроку суметь посчитать расстояние до него
-                if (enemy_data.distance) break 
-            }
+            // Найдем координаты
+            player_coords = getPosition2Flags(flag_data_1, flag_data_2)
+            this.x = player_coords.x
+            this.y = player_coords.y
+            console.log(`Координаты игрока: x=${player_coords.x}, y=${player_coords.y}. Определены по флагам (${flag_data_1.label}, ${flag_data_2.label})`) 
+        } else { // Видим только один флаг или вообще не видим флаги
+            console.log(`Обновление координат провалено: недостаточно флагов. Крайние записанные координаты: x=${this.x}, y=${this.y}`)
         }
 
-        if (!enemy_data) {
-            console.log("Противник вне поля зрения")
+        // III. Считаем координаты других игроков (если знаем свои координаты)
+        if (this.x && this.y) {
+            for (let observable of observables) {
+                if (observable.label[0] === "p") {
+                    let observable_player = observable;
+
+                    // Выбираем соперника, который достаточно близок, чтобы игроку суметь посчитать расстояние до него
+                    if (observable_player.distance) {
+                        // Определяем координаты соперника
+                        const observable_player_distance  = observable_player.distance
+                        const observable_player_direction = observable_player.direction - this.directionOfSpeed - this.headAngle
+            
+                        const observable_player_angle  = observable_player_direction * Math.PI / 180
+                        const observable_player_coords = {
+                            x: player_coords.x + Math.cos(observable_player_angle) * observable_player_distance,
+                            y: player_coords.y + Math.sin(observable_player_angle) * observable_player_distance
+                        } 
+            
+                        console.log(`Наблюдаю игрока ${observable_player.label} с координатами x=${observable_player_coords.x}, y=${observable_player_coords.y}. `)
+                    }
+                }
+            }
         } else {
-            // Определяем координаты соперника
-            const enemy_distance  = enemy_data.distance
-            const enemy_direction = enemy_data.direction - this.directionOfSpeed - this.headAngle
-
-            const enemy_angle  = enemy_direction * Math.PI / 180
-            const enemy_coords = {
-                x: player_coords.x + Math.cos(enemy_angle) * enemy_distance,
-                y: player_coords.y + Math.sin(enemy_angle) * enemy_distance
-            } 
-
-            console.log(`Координаты соперника: x=${enemy_coords.x}, y=${enemy_coords.y}. `)
+            console.log("Не можем определить координаты других игроков, т.к. не знаем своих координат.")
         }
     }
 

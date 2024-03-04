@@ -44,7 +44,42 @@ const getPosition3Flags = (flag_1, flag_2, flag_3) => {
     return {x, y}
 }
 
+// Поиск координат текущей позиции по двум флагам (см. мет. ук стр. 24)
+const getPosition2Flags = (flag_1, flag_2) => {
+    // Эпсилон чтобы избежать деления на ноль в случае, если не удалось избежать
+    // флагов с одинаковой координатой на предыдущем этапе
+    const eps = 1e-5;
+    
+    // Достаем параметры из флагов
+    const x1 = flag_1.coords.x, y1 = flag_1.coords.y, d1 = flag_1.distance;
+    const x2 = flag_2.coords.x, y2 = flag_2.coords.y, d2 = flag_2.distance;
+
+    // Алгоритм рассчета см. на стр.24 методических указаний
+    const alpha =  (y1 - y2 + eps) / (x2 - x1 + eps)
+    const beta  =  (y2**2 - y1**2 + x2**2 - x1**2 + d1**2 - d2**2 + eps) / (2 * (x2 - x1) + eps)
+
+    const a = alpha**2 + 1
+    const b = -2 * (alpha * (x1 - beta) + y1)
+    const c = (x1 - beta)**2 + y1**2 - d1**2
+
+    const underroot_y_value = Math.max(b**2 - 4 * a * c > 0, 0) // Выбираем ноль, если подкорневое значение меньше нуля 
+    const positive_y = (-b + Math.sqrt(underroot_y_value) + eps) / (2 * a + eps)
+    const negative_y = (-b - Math.sqrt(underroot_y_value) + eps) / (2 * a + eps) 
+
+    const error_ratio = 1.1 // Введем погрешность на размеры поля - координаты могут быть +- верными, но выходить за пределы поля
+
+    const y = positive_y < (-32 * error_ratio) || positive_y > (32 * error_ratio) ? negative_y: positive_y; 
+
+    const underroot_x_value = Math.max(d1**2 - (y-y1)**2, 0) // Выбираем ноль, если подкорневое значение меньше нуля 
+    const positive_x = x1 + Math.sqrt(underroot_x_value)
+    const negative_x = x1 - Math.sqrt(underroot_x_value)
+
+    const x = positive_x < (-54 * error_ratio) || positive_x > (54 * error_ratio) ? negative_x: positive_x;
+    return {x, y}
+}
+
 module.exports = {
     interpret,
-    getPosition3Flags
+    getPosition3Flags,
+    getPosition2Flags
 }
