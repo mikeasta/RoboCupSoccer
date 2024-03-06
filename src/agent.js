@@ -6,6 +6,7 @@ const flagsData = require("./data/flags.json")
 const interpret = require("./utils").interpret
 const getPosition3Flags = require("./utils").getPosition3Flags
 const getPosition2Flags = require("./utils").getPosition2Flags
+const convertFlagCoordsAccordingSide = require("./utils").convertFlagCoordsAccordingSide
 
 class Agent {
     constructor(debug=false, run=false, act=null) {
@@ -13,7 +14,9 @@ class Agent {
         this.run      = run   // Игра начата
         this.act      = act   // Действия
         this.debug    = debug // Нужно ли выводить информацию об игроке и окружении
-        
+        this.observables = []
+        this.play_on = false
+
         this.x = undefined
         this.y = undefined
         
@@ -75,12 +78,20 @@ class Agent {
         // this.debug служит для вывода в консоль данных о координатах текущего агента
         if (cmd === "see") this.debug ? this.analyzeSeeCommand(cmd, p): null;
         if (cmd === "sense_body") this.debug ? this.analyzeSenseCommand(cmd, p): null;
+        if (cmd === "hear") this.debug ? this.analyzeHearCommand(cmd, p): null;
+    }
+
+    // Анализ сообщения о том, что слышит игрок
+    analyzeHearCommand(cmd, p) {
+        const action = p[2]
+        this.play_on = action === "play_on";
     }
 
     // Анализ сообщения о том, что видит игрок
     analyzeSeeCommand(cmd, p) {
-        // I. Считываем все наблюдаемые объекты и переводим их в тип Object
-        let observables = []
+        // I. Считываем все наблюдаемые объекты, переводим их в тип Object и сохраняем в агента
+        this.observables = []
+
         for (let observable of p) {
             if (typeof observable !== "object") continue;
 
@@ -89,18 +100,25 @@ class Agent {
             const observable_data  = observable.p
 
             // Интерпретируем полученные данные
-            observables.push(interpret([observable_label, ...observable_data]))
+            this.observables.push(interpret([observable_label, ...observable_data]))
         }
 
+        // II. Считаем координаты игрока
+        this.locatePlayer();
+
+        // III. Считаем координаты других игроков (если знаем свои координаты)
+        this.locateAnotherPlayers();
+    }
+
+
+    // Расчет местоположения самого игрока 
+    locatePlayer() {
         // Отфильтруем все флаги и инвертируем их значение y
-        let flags = observables.filter(element => element.label[0] === "f" || element.label[0] === "g")
+        let flags = this.observables.filter(element => element.label[0] === "f" || element.label[0] === "g")
 
         // Для каждого увиденного флага определяем координаты
         flags.forEach(element => {
-            let coords = Object.assign({}, flagsData[element.label]) // assign чтобы ликвидировать ссылочность
-            coords.y = this.position === "l" ? -coords.y: coords.y;  // Если игрок левой стороны, инвертируем значение координаты У
-            coords.x = this.position === "r" ? -coords.x: coords.x;  // Если игрок правой стороны, инвертируем значение координаты Х
-            element.coords = coords
+            element.coords = convertFlagCoordsAccordingSide(flagsData[element.label], this.position)
         });
 
         // II. Считаем координаты самого игрока по флагам
@@ -144,10 +162,12 @@ class Agent {
         } else { // Видим только один флаг или вообще не видим флаги
             console.log(`Обновление координат провалено: недостаточно флагов. Крайние записанные координаты: x=${this.x}, y=${this.y}`)
         }
+    }
 
-        // III. Считаем координаты других игроков (если знаем свои координаты)
+    // Расчет местоположения других игроков  
+    locateAnotherPlayers() {
         if (this.x && this.y) {
-            for (let observable of observables) {
+            for (let observable of this.observables) {
                 if (observable.label[0] === "p") {
                     let observable_player = observable;
 
@@ -159,8 +179,8 @@ class Agent {
             
                         const observable_player_angle  = observable_player_direction * Math.PI / 180
                         const observable_player_coords = {
-                            x: player_coords.x + Math.cos(observable_player_angle) * observable_player_distance,
-                            y: player_coords.y + Math.sin(observable_player_angle) * observable_player_distance
+                            x: this.x + Math.cos(observable_player_angle) * observable_player_distance,
+                            y: this.y + Math.sin(observable_player_angle) * observable_player_distance
                         } 
             
                         console.log(`Наблюдаю игрока ${observable_player.label} с координатами x=${observable_player_coords.x}, y=${observable_player_coords.y}. `)
@@ -171,6 +191,7 @@ class Agent {
             console.log("Не можем определить координаты других игроков, т.к. не знаем своих координат.")
         }
     }
+
 
     // Анализ сенсоров игрока
     analyzeSenseCommand(cmd, p) {

@@ -1,4 +1,5 @@
 const Agent = require('./agent'); 
+const { Controller } = require('./controller');
 const createAgentSocket = require('./socket')
 const VERSION_DEFAULT = 7
 const prompt = require("prompt-sync")();
@@ -50,6 +51,34 @@ class App {
 
         // Запускаем цикл для поворота игрока
         setInterval(() => { left_agent.socketSend("turn", String(angle)) }, 100);
+    }
+
+    // Запуск ЛР №2
+    async setupSecondLab() {
+        const x = prompt("Введите координату Х игрока: ")
+        const y = prompt("Введите координату У игрока: ")
+
+        // Создаем игрока
+        const agent = this.addAgent(this.leftTeamLabel, true); await this.sleep(5) 
+        agent.socketSend("move", `${x} ${y}`);                 await this.sleep(5) 
+
+        // Последовательность действий
+        const action_queue = [
+            // {"act": "flag", "fl": "frb"},
+            // {"act": "flag", "fl": "gl"},
+            // {"act": "flag", "fl": "fc"},
+            {"act": "kick", "fl": "b", "goal": "gr"},
+        ]
+
+        // Исполняем инструкции
+        const controller = new Controller();
+        const playOnInterval = setInterval(() => {
+            if (agent.play_on) {
+                console.log("started")
+                controller.performActionQueue(agent, action_queue)
+                clearInterval(playOnInterval)
+            }
+        }, 10) 
     }
 }
 

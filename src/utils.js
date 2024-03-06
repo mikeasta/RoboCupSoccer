@@ -78,8 +78,21 @@ const getPosition2Flags = (flag_1, flag_2) => {
     return {x, y}
 }
 
+const convertFlagCoordsAccordingSide = (input_coords, side) => {
+    let output_coords = Object.assign({}, input_coords) // assign чтобы ликвидировать ссылочность
+    output_coords.y = side === "l" ? -output_coords.y: output_coords.y;  // Если игрок левой стороны, инвертируем значение координаты У
+    output_coords.x = side === "r" ? -output_coords.x: output_coords.x;  // Если игрок правой стороны, инвертируем значение координаты Х
+    return output_coords
+}
+
+const distance = (p1, p2) => {
+    return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
+}
+
 module.exports = {
+    distance,
     interpret,
     getPosition3Flags,
-    getPosition2Flags
+    getPosition2Flags,
+    convertFlagCoordsAccordingSide
 }
