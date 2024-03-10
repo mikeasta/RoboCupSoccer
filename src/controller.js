@@ -6,7 +6,7 @@ class Controller {
     constructor() {
         this.max_flag_distance = 3
         this.max_ball_distance = 0.5
-        this.min_turn_angle = 10
+        this.min_turn_angle = 15
     }
 
     // Функция задержки исполнения синхронного кода
@@ -15,10 +15,12 @@ class Controller {
     // Выполнить цепочку действий
     async performActionQueue(agent, action_queue) {
         while (action_queue.length) {
+            while(agent.act != null) await this.sleep(5)
+
             const current_action = action_queue[0]
+            console.log(current_action)
             let res = false
 
-            console.log("action ", current_action)
             switch(current_action["act"]) {
                 case "flag": res = this.moveToFlag(agent, current_action["fl"]); break;
                 case "kick": res = this.makeGoal(agent, current_action["goal"]); break;
@@ -26,7 +28,6 @@ class Controller {
 
             // Выполнили действие
             if (res) action_queue.shift() 
-            await this.sleep(100)
         }
     }
 
@@ -84,7 +85,8 @@ class Controller {
         }
 
         // Проверяем дошли ли мы до мяча
-        if (!this.moveAgentToObservable(agent, ball, this.max_ball_distance)) return false
+        if (!this.moveAgentToObservable(agent, ball, this.max_ball_distance)) 
+            return false
 
         if (!flag) {
             this.kickBall(agent, 10, this.calcGoalAngle(agent, flagLabel))
@@ -97,32 +99,41 @@ class Controller {
     }
 
     calcGoalAngle(agent, goalObjectLabel) {
-        const observableObject = agent.observables.filter(element => element.label[0] === "f" || element.label[0] === "g")[0]
-        console.log(observableObject)
+        const observableObject = agent.observables.filter(element => element.label[0] === "f" || element.label[0] === "g")[0] 
         if (goalObjectLabel[0] === "f" || goalObjectLabel[0] === "g") {
             const goalObjectCoords = convertFlagCoordsAccordingSide(flagCoords[goalObjectLabel], agent.position)
             
-            const x1 = observableObject.coords.x , y1 = observableObject.coords.y 
-            const x2 = goalObjectCoords.x ,        y2 = goalObjectCoords.y  
-            const d1 = observableObject.distance, d2 = distance({x: agent.y, y: agent.y}, {x: x2, y: y2})
-            console.log(x1, y1, x2, y2, d1, d2)
-            return Math.acos((x1 * x2 + y1 * y2) / (d1 * d2))
+            const x1 = observableObject.coords.x - agent.x, y1 = observableObject.coords.y - agent.y
+            const x2 = goalObjectCoords.x        - agent.x, y2 = goalObjectCoords.y        - agent.y
+            
+            // Строим новый ортогональный базис
+            const new_basis_vec_1 = { x: x1, y: y1 }, new_basis_vec_2 = { x: -y1, y: x1 } 
+
+            // Переводим вектор (x2, y2) в новую систему координат
+            const new_x2 = x2 * new_basis_vec_1.x + y2 * new_basis_vec_1.y
+            const new_y2 = x2 * new_basis_vec_2.x + y2 * new_basis_vec_2.y
+
+            // Находим синус и косинус
+            const vector_length = Math.sqrt(new_x2**2 + new_y2**2)
+            const vec_cos = new_x2 / vector_length
+            const vec_sin = new_y2 / vector_length
+
+            const angle = Math.acos(vec_cos) * Math.pow(vec_sin, 0) * 180 / Math.PI - observableObject.direction
+            return Math.round(-angle)
         }
+        return 45
     }
 
     async turnAgent(agent, angle) {
         agent.act = {n: "turn", v: angle}
-        agent.socketSend("turn", String(angle))
     }
 
     async runAgent(agent, power) {
         agent.act = {n: "dash", v: power}
-        agent.socketSend("dash", String(power))
     }
 
     async kickBall(agent, power, angle) {
         agent.act = {n: "kick", v: power + ' ' + angle}
-        agent.socketSend("kick", `${power} ${angle}`)
     }
 }
 

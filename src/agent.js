@@ -17,8 +17,7 @@ class Agent {
         this.observables = []
         this.play_on = false
 
-        this.x = undefined
-        this.y = undefined
+        this.x = undefined, this.y = undefined
         
         // Чтение консоли
         this.rl = readline.createInterface({ 
@@ -51,7 +50,7 @@ class Agent {
     }
 
     // Отправка команды
-    socketSend(cmd, value) { 
+    socketSend(cmd, value) {         
         this.socket.sendMsg(`(${cmd} ${value})`)
     }
 
@@ -208,13 +207,10 @@ class Agent {
         // Игра начата 
         if(this.run){ 
             // Есть команда от игрока
-            if(this.act){ 
+            if(this.act) { 
                 switch(this.act.n) {
-                    // Пнуть мяч
-                    case "kick": this.socketSend(this.act.n, this.act.v + " 0"); break;
-                    
-                    // Движение и поворот
-                    default: this.socketSend(this.act.n, this.act.v); break;
+                    case "kick": case "dash": case "turn": this.socketSend(this.act.n, this.act.v); break;
+                    default: this.socketSend(this.act.n, this.act.v);
                 }                    
             }
 
