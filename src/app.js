@@ -1,5 +1,5 @@
 const Agent = require('./agent'); 
-const { Controller } = require('./controller');
+const { AgentController } = require('./controller');
 const createAgentSocket = require('./socket')
 const VERSION_DEFAULT = 7
 const prompt = require("prompt-sync")();
@@ -64,21 +64,16 @@ class App {
 
         // Последовательность действий
         const action_queue = [
-            // {"act": "flag", "fl": "frb"},
-            // {"act": "flag", "fl": "gl"},
-            // {"act": "flag", "fl": "fc"},
+            {"act": "flag", "fl": "frb"},
+            {"act": "flag", "fl": "gl"},
+            {"act": "flag", "fl": "fc"},
             {"act": "kick", "fl": "b", "goal": "gr"},
         ]
 
         // Исполняем инструкции
-        const controller = new Controller();
-        const playOnInterval = setInterval(() => {
-            if (agent.play_on) {
-                console.log("started")
-                controller.performActionQueue(agent, action_queue)
-                clearInterval(playOnInterval)
-            }
-        }, 10) 
+        const controller = new AgentController()
+        agent.setActions(action_queue)
+        agent.setController(controller)
     }
 }
 

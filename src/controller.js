@@ -2,33 +2,28 @@ const flagCoords = require("./data/flags.json")
 const convertFlagCoordsAccordingSide = require("./utils").convertFlagCoordsAccordingSide
 const distance = require("./utils").distance
 
-class Controller {
+class AgentController {
     constructor() {
         this.max_flag_distance = 3
         this.max_ball_distance = 0.5
         this.min_turn_angle = 15
     }
 
-    // Функция задержки исполнения синхронного кода
-    sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
-
     // Выполнить цепочку действий
-    async performActionQueue(agent, action_queue) {
-        while (action_queue.length) {
-            while(agent.act != null) await this.sleep(5)
-
-            const current_action = action_queue[0]
-            console.log(current_action)
-            let res = false
-
-            switch(current_action["act"]) {
-                case "flag": res = this.moveToFlag(agent, current_action["fl"]); break;
-                case "kick": res = this.makeGoal(agent, current_action["goal"]); break;
-            }
-
-            // Выполнили действие
-            if (res) action_queue.shift() 
+    performAction(agent) {
+        // Если нет действий в очереди действий
+        if (!agent.actions.length) return
+        
+        const action = agent.actions[0]
+        console.log(action)
+        let res = false
+        switch(action["act"]) {
+            case "flag": res = this.moveToFlag(agent, action["fl"]); break;
+            case "kick": res = this.makeGoal(agent, action["goal"]); break;
         }
+        
+        // Выполнили действие
+        if (res) agent.actions.shift() 
     }
 
     // Перемещение к флагу
@@ -44,7 +39,7 @@ class Controller {
         if (flag) { // Если флаг видно, двигаемся по направлению к нему
             return this.moveAgentToObservable(agent, flag, this.max_flag_distance)
         } else { // Если флаг не видно, поворачиваемся, пока не увидим флаг
-            this.turnAgent(agent, 15)
+            this.turnAgent(agent, 10)
             return false
         }
     }
@@ -60,7 +55,7 @@ class Controller {
 
         // run slower if its not too far
         // check if it is acceleration or absolute speed
-        this.runAgent(agent, observable.distance > 10 ? 50 : 30)
+        this.runAgent(agent, observable.distance > 10 ? 100 : 20)
         return false
     }
 
@@ -80,7 +75,7 @@ class Controller {
 
         // Проверяем есть ли мяч в поле зрения
         if (!ball) {
-            this.turnAgent(agent, 15)
+            this.turnAgent(agent, 10)
             return false
         }
 
@@ -98,6 +93,7 @@ class Controller {
         return false
     }
 
+    // Посчитать угол удара мяча в случае, когда не видна точка для достижения цели.
     calcGoalAngle(agent, goalObjectLabel) {
         const observableObject = agent.observables.filter(element => element.label[0] === "f" || element.label[0] === "g")[0] 
         if (goalObjectLabel[0] === "f" || goalObjectLabel[0] === "g") {
@@ -124,17 +120,18 @@ class Controller {
         return 45
     }
 
-    async turnAgent(agent, angle) {
+    // Функции для записи действия
+    turnAgent(agent, angle) {
         agent.act = {n: "turn", v: angle}
     }
 
-    async runAgent(agent, power) {
+    runAgent(agent, power) {
         agent.act = {n: "dash", v: power}
     }
 
-    async kickBall(agent, power, angle) {
+    kickBall(agent, power, angle) {
         agent.act = {n: "kick", v: power + ' ' + angle}
     }
 }
 
-module.exports = {Controller}
+module.exports = {AgentController}

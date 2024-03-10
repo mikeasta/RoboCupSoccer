@@ -13,6 +13,8 @@ class Agent {
         this.position = "l"   // По умолчанию левая половина поля
         this.run      = run   // Игра начата
         this.act      = act   // Действия
+        this.actions  = []
+
         this.debug    = debug // Нужно ли выводить информацию об игроке и окружении
         this.observables = []
         this.play_on = false
@@ -35,6 +37,14 @@ class Agent {
                 if("s" == input) this.act = {n: "kick", v: 100}
             }
         })
+    }
+
+    setActions(actions) {
+        this.actions = actions
+    }
+
+    setController(controller) {
+        this.controller = controller
     }
 
     // Получение сообщения
@@ -107,6 +117,9 @@ class Agent {
 
         // III. Считаем координаты других игроков (если знаем свои координаты)
         this.locateAnotherPlayers();
+
+        // IV. Принимаем действие на основе того, что видим
+        if (this.actions.length && this.controller && this.play_on) this.controller.performAction(this) // исполняем действие
     }
 
 
