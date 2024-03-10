@@ -64,9 +64,9 @@ class App {
 
         // Последовательность действий
         const action_queue = [
-            {"act": "flag", "fl": "frb"},
-            {"act": "flag", "fl": "gl"},
-            {"act": "flag", "fl": "fc"},
+            // {"act": "flag", "fl": "frb"},
+            // {"act": "flag", "fl": "gl"},
+            // {"act": "flag", "fl": "fc"},
             {"act": "kick", "fl": "b", "goal": "gr"},
         ]
 

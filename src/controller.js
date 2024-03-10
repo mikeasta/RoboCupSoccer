@@ -55,7 +55,7 @@ class AgentController {
 
         // run slower if its not too far
         // check if it is acceleration or absolute speed
-        this.runAgent(agent, observable.distance > 10 ? 100 : 20)
+        this.runAgent(agent, observable.distance > 10 ? 100 : 30)
         return false
     }
 
