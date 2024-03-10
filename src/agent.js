@@ -16,8 +16,8 @@ class Agent {
         this.actions  = []
 
         this.debug    = debug // Нужно ли выводить информацию об игроке и окружении
-        this.observables = []
-        this.play_on = false
+        this.observables = [] // Сохраняем список наблюдаемых объектов
+        this.play_on = false  // Игра начата
 
         this.x = undefined, this.y = undefined
         

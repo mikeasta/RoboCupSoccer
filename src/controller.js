@@ -6,7 +6,7 @@ class AgentController {
     constructor() {
         this.max_flag_distance = 3
         this.max_ball_distance = 0.5
-        this.min_turn_angle = 15
+        this.min_turn_angle = 5
     }
 
     // Выполнить цепочку действий
@@ -14,15 +14,17 @@ class AgentController {
         // Если нет действий в очереди действий
         if (!agent.actions.length) return
         
+        // Берем первое действие агента
         const action = agent.actions[0]
-        console.log(action)
+
+        // Сохраним результат действия
         let res = false
         switch(action["act"]) {
             case "flag": res = this.moveToFlag(agent, action["fl"]); break;
             case "kick": res = this.makeGoal(agent, action["goal"]); break;
         }
         
-        // Выполнили действие
+        // Если мы выполнили действие, то удаляем его
         if (res) agent.actions.shift() 
     }
 
@@ -39,23 +41,25 @@ class AgentController {
         if (flag) { // Если флаг видно, двигаемся по направлению к нему
             return this.moveAgentToObservable(agent, flag, this.max_flag_distance)
         } else { // Если флаг не видно, поворачиваемся, пока не увидим флаг
-            this.turnAgent(agent, 10)
+            this.turnAgent(agent, 15)
             return false
         }
     }
 
     // Перемещение к наблюдаемому объекту
     moveAgentToObservable(agent, observable, max_observable_distance) {
+        // Если дошли до объекта
         if (observable.distance < max_observable_distance) return true
 
+        // Если угол между объектом и лучевым вектором скорости больше заданного
+        // значения, поворачиваемся в сторону объекта
         if (Math.abs(observable.direction) > this.min_turn_angle) { 
             this.turnAgent(agent, observable.direction)
             return false
         }
 
-        // run slower if its not too far
-        // check if it is acceleration or absolute speed
-        this.runAgent(agent, observable.distance > 10 ? 100 : 30)
+        // Бежим по направлению к объекту
+        this.runAgent(agent, observable.distance > 5 ? 100 : 40)
         return false
     }
 
@@ -75,7 +79,7 @@ class AgentController {
 
         // Проверяем есть ли мяч в поле зрения
         if (!ball) {
-            this.turnAgent(agent, 10)
+            this.turnAgent(agent, 15)
             return false
         }
 
@@ -84,6 +88,7 @@ class AgentController {
             return false
 
         if (!flag) {
+            console.log(flag)
             this.kickBall(agent, 10, this.calcGoalAngle(agent, flagLabel))
             return false
         }
