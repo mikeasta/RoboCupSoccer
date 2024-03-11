@@ -9,43 +9,41 @@ const getPosition2Flags = require("./utils").getPosition2Flags
 const convertFlagCoordsAccordingSide = require("./utils").convertFlagCoordsAccordingSide
 
 class Agent {
-    constructor(debug=false, run=false, act=null) {
-        this.position = "l"   // По умолчанию левая половина поля
-        this.run      = run   // Игра начата
-        this.act      = act   // Действия
-        this.actions  = []
+    constructor(run=false, act=null) {
+        // Параметры команды
+        this.role        = null
+        this.number      = null
+        this.teamLabel   = null 
+        this.position    = "l"   // По умолчанию левая половина поля
 
-        this.debug    = debug // Нужно ли выводить информацию об игроке и окружении
-        this.observables = [] // Сохраняем список наблюдаемых объектов
-        this.play_on = false  // Игра начата
+        // Параметры стратегии
+        this.run         = run    // Игра начата
+        this.act         = act    // Текущее действие для исполнения
+        this.actions     = []     // Последовательность действий для исполнения
+        this.observables = []     // Сохраняем список наблюдаемых объектов
+        this.play_on     = false  // Мяч вброшен
 
+        // Координаты игрока
         this.x = undefined, this.y = undefined
-        
-        // Чтение консоли
-        this.rl = readline.createInterface({ 
-            input: process.stdin,
-            output: process.stdout
-        })
-
-        // Обработка строки из консоли
-        this.rl.on('line', input => {  
-            // Если игра начата движения вперед, вправо, влево, удар по мячу
-            if(this.run) { 
-                if("w" == input) this.act = {n: "dash", v: 100}
-                if("d" == input) this.act = {n: "turn", v: 20}
-                if("a" == input) this.act = {n: "turn", v: -20}
-                if("s" == input) this.act = {n: "kick", v: 100}
-            }
-        })
     }
 
-    setActions(actions) {
-        this.actions = actions
-    }
+    // Задать роль игрока
+    setRole(role) { this.role = role }
 
-    setController(controller) {
-        this.controller = controller
-    }
+    // Задать номер игрока
+    setNumber(number) { this.number = number }
+
+    // Задать название команды
+    setTeamLabel(teamLabel) { this.teamLabel = teamLabel }
+
+    // Задать последовательность действий, которые должен исполнить игрок
+    setActions(actions) { this.actions = actions }
+
+    // Задать движок для управления игроком - контроллер
+    setController(controller) { this.controller = controller }
+
+    // Задать координаты игрока
+    setCoordinates(x, y) { this.x = x; this.y = y; }
 
     // Получение сообщения
     msgGot(msg) { 
@@ -55,14 +53,10 @@ class Agent {
     }
 
     // Настройка сокета
-    setSocket(socket) { 
-        this.socket = socket
-    }
+    setSocket(socket) { this.socket = socket }
 
     // Отправка команды
-    socketSend(cmd, value) {         
-        this.socket.sendMsg(`(${cmd} ${value})`)
-    }
+    socketSend(cmd, value) { this.socket.sendMsg(`(${cmd} ${value})`) }
 
     // Обработка сообщения
     processMsg(msg){ 
@@ -83,11 +77,10 @@ class Agent {
     }
 
     // Анализ сообщения
-    analyzeEnv(msg, cmd, p){ 
-        // this.debug служит для вывода в консоль данных о координатах текущего агента
-        if (cmd === "see") this.debug ? this.analyzeSeeCommand(cmd, p): null;
-        if (cmd === "sense_body") this.debug ? this.analyzeSenseCommand(cmd, p): null;
-        if (cmd === "hear") this.debug ? this.analyzeHearCommand(cmd, p): null;
+    analyzeEnv(msg, cmd, p) { 
+        if (cmd === "see") this.analyzeSeeCommand(cmd, p);
+        if (cmd === "sense_body") this.analyzeSenseCommand(cmd, p);
+        if (cmd === "hear") this.analyzeHearCommand(cmd, p);
     }
 
     // Анализ сообщения о том, что слышит игрок
@@ -138,7 +131,6 @@ class Agent {
         const flagsWithDistance = flags.filter(flag => typeof flag.distance != "undefined")
             .sort((a, b) => a.direction - b.direction); 
 
-        let player_coords
         if (flagsWithDistance.length >= 3) { // Видим три или более флагов
             // Берем два самых крайних в поле зрения флага
             const flag_data_2 = flagsWithDistance[0]
@@ -157,20 +149,16 @@ class Agent {
             }
 
             // Найдем координаты
-            player_coords = getPosition3Flags(flag_data_1, flag_data_2, flag_data_3)
-            this.x = player_coords.x
-            this.y = player_coords.y
-            console.log(`Координаты игрока: x=${player_coords.x}, y=${player_coords.y}. Определены по флагам (${flag_data_1.label}, ${flag_data_2.label}, ${flag_data_3.label})`) 
+            const {x, y} = getPosition3Flags(flag_data_1, flag_data_2, flag_data_3)
+            this.setCoordinates(x, y)
         } else if (flagsWithDistance.length === 2) { // Видим только два флага
             // Берем два единственных флага
             const flag_data_1 = flagsWithDistance[0]
             const flag_data_2 = flagsWithDistance[1]
 
             // Найдем координаты
-            player_coords = getPosition2Flags(flag_data_1, flag_data_2)
-            this.x = player_coords.x
-            this.y = player_coords.y
-            console.log(`Координаты игрока: x=${player_coords.x}, y=${player_coords.y}. Определены по флагам (${flag_data_1.label}, ${flag_data_2.label})`) 
+            const {x, y} = getPosition2Flags(flag_data_1, flag_data_2)
+            this.setCoordinates(x, y)
         } else { // Видим только один флаг или вообще не видим флаги
             console.log(`Обновление координат провалено: недостаточно флагов. Крайние записанные координаты: x=${this.x}, y=${this.y}`)
         }
@@ -195,7 +183,7 @@ class Agent {
                             y: this.y + Math.sin(observable_player_angle) * observable_player_distance
                         } 
             
-                        console.log(`Наблюдаю игрока ${observable_player.label} с координатами x=${observable_player_coords.x}, y=${observable_player_coords.y}. `)
+                        // console.log(`Наблюдаю игрока ${observable_player.label} с координатами x=${observable_player_coords.x}, y=${observable_player_coords.y}. `)
                     }
                 }
             }

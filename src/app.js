@@ -3,6 +3,7 @@ const { AgentController } = require('./controller');
 const createAgentSocket = require('./socket')
 const VERSION_DEFAULT = 7
 const prompt = require("prompt-sync")();
+const agentsArrangement = require("./data/agents.json")
 
 class App {
     constructor(version=VERSION_DEFAULT, leftTeamLabel="Pandas", rightTeamLabel="Polars") {
@@ -64,9 +65,9 @@ class App {
 
         // Последовательность действий
         const action_queue = [
-            // {"act": "flag", "fl": "frb"},
-            // {"act": "flag", "fl": "gl"},
-            // {"act": "flag", "fl": "fc"},
+            {"act": "flag", "fl": "frb"},
+            {"act": "flag", "fl": "gl"},
+            {"act": "flag", "fl": "fc"},
             {"act": "kick", "fl": "b", "goal": "gr"},
         ]
 
@@ -74,6 +75,23 @@ class App {
         const controller = new AgentController()
         agent.setActions(action_queue)
         agent.setController(controller)
+    }
+
+    // Запуск ЛР №3
+    async setupThirdLab() {
+        const controller = new AgentController()
+        for (let i = 0; i < 11; i++) {
+            const agentInfo = agentsArrangement[i]
+            const agent = this.addAgent(this.leftTeamLabel);                  await this.sleep(5);
+            agent.socketSend("move", `${agentInfo["x"]} ${agentInfo["y"]}`);  await this.sleep(5);
+            
+            // Задаем параметры игрока
+            agent.setRole(agentInfo["role"])
+            agent.setNumber(i+1),
+            agent.setTeamLabel(this.leftTeamLabel)
+            agent.setController(controller)
+        }
+
     }
 }
 

@@ -31,6 +31,7 @@ class AgentController {
     // Перемещение к флагу
     moveToFlag(agent, flagLabel) {
         let flag
+        // Перебираем наблюдаемые флаги
         for (let observable of agent.observables) {
             if (observable.label === flagLabel) {
                 flag = observable

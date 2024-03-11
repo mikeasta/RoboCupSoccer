@@ -1,0 +1,17 @@
+[
+    { "role": "goalkeeper", "x": -50, "y": 0 },
+
+    { "role": "left_center_back", "x": -40, "y": -10 },
+    { "role": "right_center_back", "x": -40, "y": 10 },
+
+    { "role": "left_outside_back", "x": -35, "y": -20 },
+    { "role": "right_outside_back", "x": -35, "y": 20 },
+
+    { "role": "left_middlefielder", "x": -25, "y": -15 },
+    { "role": "right_middlefielder", "x": -25, "y": 15 },
+    { "role": "center_middlefielder", "x": -25, "y": 0 },
+
+    { "role": "left_winger", "x": -15, "y": -25 },
+    { "role": "right_winger", "x": -15, "y": 25 },
+    { "role": "center_forward", "x": -10, "y": 0 }
+]
