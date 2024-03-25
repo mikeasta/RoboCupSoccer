@@ -11,7 +11,7 @@
     { "role": "right_middlefielder", "x": -25, "y": 15 },
     { "role": "center_middlefielder", "x": -25, "y": 0 },
 
-    { "role": "left_winger", "x": -15, "y": -25 },
-    { "role": "right_winger", "x": -15, "y": 25 },
+    { "role": "left_winger", "x": -20, "y": -5 },
+    { "role": "right_winger", "x": -20, "y": 5 },
     { "role": "center_forward", "x": -10, "y": 0 }
 ]

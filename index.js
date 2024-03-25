@@ -2,6 +2,11 @@
 require('events').EventEmitter.defaultMaxListeners = 23;
 
 // Инициализируем и запускаем игру
-const App = require("./src/app")
-const app = new App()
-app.setupThirdLab()
+LAB_NUMBER = 6;
+
+switch(LAB_NUMBER) {
+    case 3: require("./lab_3/app").setupThirdLab(); break;
+    case 4: require("./lab_4/app").setupFourthLab(); break;
+    case 5: require("./lab_5/app").setupFifthLab(); break;
+    case 6: require("./lab_6/app").setupSixthLab(); break;
+}

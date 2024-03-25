@@ -4,6 +4,7 @@ const distance = require("./utils").distance
 
 class AgentController {
     constructor() {
+        this.max_move_distance = 1
         this.max_flag_distance = 3
         this.max_ball_distance = 0.5
         this.min_turn_angle = 5
@@ -20,8 +21,8 @@ class AgentController {
         // Сохраним результат действия
         let res = false
         switch(action["act"]) {
-            case "flag": res = this.moveToFlag(agent, action["fl"]); break;
-            case "kick": res = this.makeGoal(agent, action["goal"]); break;
+            case "flag": res = this.moveToFlag(agent, action["fl"]);            break;
+            case "kick": res = this.makeGoal(agent, action["goal"]);            break;
         }
         
         // Если мы выполнили действие, то удаляем его
